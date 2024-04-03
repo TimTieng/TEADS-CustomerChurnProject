@@ -15,22 +15,8 @@ In this project, you will:
 12 to 14 hours
 
 
-### Task 1: Initial Data Exploration
+### Project Information
 
-**Objective:** Load the dataset and perform an initial examination to understand its structure and identify any immediate cleaning needs.
-
-**Activities:**
-
-1. Load the dataset using pandas and display the first few rows to get an initial understanding of the data.
-2. Examine the dataset's shape to understand the scale of the data we're dealing with.
-3. Check the data types of each column to identify which are categorical and which are numerical.
-4. Identify any missing values in the dataset.
-5. Generate summary statistics for numerical columns to identify any immediate anomalies or outliers.
-
-
-**Estimated Completion Time:** 60 minutes
-
-## Project Information
     Python Version: 3.10.13
     Python Packages: Outlined in pip_requirements.txt
     Dataset: WA_Fn-UseC_-Telco-Customer-Churn.csv (Provided)
@@ -59,44 +45,83 @@ import keras
 ```
 
 
-```python
-# Obtain - Read in the data, convert to PD Dataframe, and perform initial inspection of the dataset
-churn_file = pd.read_csv('../Data/WA_Fn-UseC_-Telco-Customer-Churn.csv')
-churn_df = pd.DataFrame(churn_file)
+## Task 1: Initial Data Exploration
 
-# Initial inspect - Provde information on Attribute Names, Non-Null Count, Data Types, Memory Usage
-churn_df.info(memory_usage='deep')
+**Objective:** Load the dataset and perform an initial examination to understand its structure and identify any immediate cleaning needs.
 
-```
+**Activities:**
 
-### Initial Data Observations:
-    
-1. Rows/Observations: 7043 
-2. Attributes/Columns: 21
-3. Datatypes Present: int64(2x), float64(1x), string objects(18x)
-4. Memory Usage - 7.8 MB (Small)
+1. Load the dataset using pandas and display the first few rows to get an initial understanding of the data.
+2. Examine the dataset's shape to understand the scale of the data we're dealing with.
+3. Check the data types of each column to identify which are categorical and which are numerical.
+4. Identify any missing values in the dataset.
+5. Generate summary statistics for numerical columns to identify any immediate anomalies or outliers.
+
+
+**Estimated Completion Time:** 60 minutes
 
 **Hints:**
 
 * Use `pd.read_csv()` to load the dataset. Remember to `import pandas as pd`.
 * Use `.head()`, `.info()`, `.dtypes`, `.isnull().mean()`, and .`describe()` methods to explore the dataset.
 
-## Data Cleaning
+### Task 1.1: Load the Dataset
 
 
 ```python
-churn_df['TotalCharges'].replace(' ', 0, inplace=True)
+# Obtain - Read in the data, convert to PD Dataframe, and perform initial inspection of the dataset
+churn_file = pd.read_csv('../Data/WA_Fn-UseC_-Telco-Customer-Churn.csv')
+churn_df = pd.DataFrame(churn_file)
+
+```
+
+### Task 1.2: Examine the Dataset:
+
+
+```python
+print(churn_df.shape)
+```
+
+#### Observations
+1. Rows/Observations: 7043 
+2. Attributes/Columns: 21
+3. Datatypes Present: int64(2x), float64(1x), string objects(18x)
+4. Memory Usage - 7.8 MB (Small)
+
+
+### Task 1.3: Check Datatypes
+
+
+```python
+# Initial inspect - Provde information on Attribute Names, Non-Null Count, Data Types, Memory Usage
+churn_df.info(memory_usage='deep')
+
+```
+
+### Task 1.4: Check for Missing Values
+
+#### Observations 
+TotalCharges has some values with whitespace strings. These need replaced with 0s. We will also change the SeniorCitizen Column to a string because although it contains 0s and 1s, it is a categorical column. Lastly, we are changing TotalCharges to a numerical column because it contains numerical data. 
+
+
+```python
+# Check for null Values - percentage per column
+churn_df.isna().mean().sort_values(ascending= False)
+# No null values 
+
 ```
 
 
 ```python
-# Data Cleaning - Changing 'SeniorCitizen' column to string because it is a categorical column encoded as a number
-# Will convert back to numerical encoding with other categorical columns 
 
+churn_df.TotalCharges = churn_df['TotalCharges'].replace(' ', 0)
 churn_df['SeniorCitizen'] = churn_df['SeniorCitizen'].astype('str')
 churn_df['TotalCharges'] = pd.to_numeric(churn_df['TotalCharges'])
 churn_df.info(memory_usage='deep')
 ```
+
+
+### Task 1.5: Generate Summary Statistics
 
 
 ```python
@@ -106,13 +131,7 @@ churn_df.head()
 
 
 ```python
-# Check for null Values - percentage per column
-churn_df.isna().mean().sort_values(ascending= False)
-# No null values 
-```
 
-
-```python
 # Desriptive Statistics -Numerical Attributes
 churn_df.describe()
 ```
@@ -123,7 +142,8 @@ churn_df.describe()
 churn_df.describe(include='all')
 ```
 
-### Churn Data Frame Observerations
+#### Data Observerations
+
 1. Gender Distribution - Dataset has 7043 total observations with only two unique values (Male, Female). Right now there are 3555 Male values Which suggest the data is relatively balanced. 
 2. Senior Citizen Attribute (Prior to DT casting) - The mean value is .162 which can be translated as 16.2 of the userbase is classified as a senior citizen. Additional definition of what describes a Senior Citizen mayh be needed for future analysis (what age classifies senior citizen cut off?)
 3. Tenure - Mean value is about 32.4% with a min value of 0 months and max months membership of 72 months. STD is 24.6 which can be viewed as a wide variance in the quartiles.
@@ -134,7 +154,9 @@ churn_df.describe(include='all')
 ---
 ---
 
-### Task 2: Exploratory Data Analysis (EDA)
+
+## Task 2: Exploratory Data Analysis (EDA)
+
 
 **Objective:** Use statistical analysis and visualization techniques to uncover insights and identify patterns related to custom	er churn.
 
@@ -157,8 +179,12 @@ churn_df.describe(include='all')
 
 
 
+### Task 2.1 Visualize distribution of numerical features
+Created a function to visualize numerical features. 
+
+
+
 ```python
-# EDA - Initial Visualizations on Numerical Data. Create a funciton that will do this in one step
 
 def visualize_numerical_histograms(df):
     """
@@ -189,14 +215,17 @@ def visualize_numerical_histograms(df):
 visualize_numerical_histograms(churn_df)
 ```
 
-### Histogram Observations
+#### Visual Observations
+
 1. **Tenure Distribution**: There are two distinct peaks for this attribute, alluding to that the current customer base are either new OR customers that churn quickly. The center dip in the graph may allude to the typical range where churn is likely to happen
 2. **MonthlyCharges Distribution**: Visually, there is a right skew to this column. There also seems to be a lot of customers who are only paying for $20 for services. This may highlight that these customers are only paying for a single service (internet, phone, etc). From a business/market capture perspective, we can view this as potential customer base to target with the goal of motivating them to add more services to their subscription. The right end of the graph may represent customers who pay for premium-like services or combines multiple service offerings to their subscription. 
 3. **TotalCharges Distributio**n**: This attribute has a long trailing tail towards the right of the graph. Additionally, there are alot of customers with a low "TotalCharges" value. This is aligned with teh MonthlyCharges column and may be attributed to the customer base only paying for 1 service. 
 
 **Business Significance**: The three graphs shows information abou the current customer base. It seems as though there are two "populations" in the customer base: Customers who are new, and customers who pay for multiple services. Based on the dip in the MonthlyCharges Distribution, this could be viewed as our customberbase we should focus on.
 
-### Numerical Columns: Anderson Tests for Skewness
+
+#### Statistical Observations: Anderson Tests for Skewness
+
 
 
 ```python
@@ -214,7 +243,8 @@ def anderson_skewness_test(df):
     if len(col) < 8:
       print("\t", end="")
     print(f'{a.statistic:.2f}', end="\t")
-    if a.statistic < a.critical_values[4]:
+
+    if a.statistic < a.critical_values[0]:
       print("Normal")
     else:
       print("Not Normal")
@@ -223,33 +253,64 @@ def anderson_skewness_test(df):
 anderson_skewness_test(churn_df)
 ```
 
-### Categorical Columns: Categorical Encoding
+
+Observations: 
+- None of our numerical columns are normal at the 15% significance level based on having anderson values above the critical value at the 15% threshold. 
+
+### Task 2.2 Analyze Churn by Categorical Features
 
 
 ```python
-#TODO put this in a function 
-categorical_cols = []
-numerical_cols = []
-for c in churn_df.columns:
-  if churn_df[c].map(type).eq(str).any() or churn_df[c].map(type).eq(str).any():
-    categorical_cols.append(c)
-  else:
-    numerical_cols.append(c)
+def analyze_churn_categorical_features(df):
+  """
+  Purpose - To identify distribution of categories in categorical features
+  Parameters - Pandas Dataframe
+  Returns - Nothing
+  Prints - Boxplots for the provided pandas Dataframe that can be used for Exploratory Data Analysis (EDA)
+  """
+  categorical_cols = []
+  numerical_cols = []
+  for c in df.columns:
+    if df[c].map(type).eq(str).any() or df[c].map(type).eq(str).any():
+      categorical_cols.append(c)
+    else:
+      numerical_cols.append(c)
 
-data_numeric = churn_df[numerical_cols]
-data_categorical = pd.DataFrame(churn_df[categorical_cols])
-
-from feature_engine.encoding import CountFrequencyEncoder
-encoder = CountFrequencyEncoder(encoding_method='frequency')
-encoder.fit(data_categorical)
-data_categorical = pd.DataFrame(encoder.transform(data_categorical), columns = data_categorical.columns, index=data_categorical.index) #only apply imputer to numeric columns
-
-data_joined = pd.concat([data_numeric, data_categorical], axis=1)
-
-data_joined.describe(include='all')
-data_joined.head()
+  for col in categorical_cols:
+    count = df[col].nunique() 
+    print(f"{col}", end="")
+    if len(col) < 8:
+      print("\t", end="")
+    if len(col) < 16:
+      print("\t", end="")
+    print(f" Num Categories: {count}")
+    for cat in df[col].unique():
+      if col == "customerID":
+        continue
+      count_cat = df[col].value_counts()[cat]  
+      print(f"\t{cat}: {count_cat}, {count_cat/df.shape[0]*100:.2f}%")
+    print()
+    
+  data_numeric = df[numerical_cols]
+  data_categorical = pd.DataFrame(df[categorical_cols])
+    
+  data_joined = pd.concat([data_numeric, data_categorical], axis=1)
+    
+  data_joined.describe(include='all')
+  data_joined.head()
+  return
 
 ```
+
+
+```python
+analyze_churn_categorical_features(churn_df)
+```
+
+#### Observations 
+- **Encoding Techniques**: Based on the distributions, it is likely a LabelEncoder is the best way to encode the various categorial columns in the dataset. 
+
+### Task 2.3: Use Boxplots to identify outliers in numerical data
 
 
 ```python
@@ -288,7 +349,9 @@ def create_boxplots(df):
 create_boxplots(churn_df)
 ```
 
-### Boxplot Observations
+
+#### Boxplot Observations
+
 1. **SeniorCitizen (Prior to casting)** - There seems to be an outlier that returns an ineffective boxplot. I need to create a function that can handle outliers. I originally thought handling the figure width was needed to resolve the error. 
 2. **Tenure Boxplot** : This attrribute looks relatively uniform. This graph visually describes the customers who been wiht the services for a long time
 3. **MonthlyCharges Boxplot**: The median placement on the graph confirms the right skew nature from the histogram. This plot also confirms the observation that customers tend to have lower monthly charges or are paying for single services vs bundling services
@@ -380,6 +443,7 @@ chi_squared_test(churn_df, 'Churn')
 6.  PaymentMethod
 7.  Contract
 
+
 ### Cramer's V-Test on Categorical Values
 
 
@@ -401,10 +465,25 @@ def cramers_v(confusion_matrix):
     rcorr = r - ((r-1)**2)/(n-1)
     kcorr = k - ((k-1)**2)/(n-1)
     return np.sqrt(phi2corr / min((kcorr-1), (rcorr-1)))
+
+### Task 2.5: Create Pair Plot
+
+
+```python
+def create_pair_plot(df): 
+    """
+    Purpose - 
+    Parameters - 
+    Return - 
+    Prints - 
+    """
+    pass
+
 ```
 
 
 ```python
+
 def calculate_cramers_v_for_attributes(df, attributes):
     """
     Purpose: To assess the relationship between each pair of categorical attributes.
@@ -450,6 +529,17 @@ V-Values range from approximately 0.2 - 0.7.
 
 ### Task 3: Data Preprocessing
 
+create_pair_plot(churn_df)
+```
+
+#### Observations
+
+---
+---
+
+## Task 3: Data Preprocessing
+
+
 **Objective:** Split the dataset into training and testing sets, then clean the training dataset by handling missing values, outliers, and duplicate entries using `feature_engine` to prepare for further analysis.
 
 **Activities:**
@@ -475,14 +565,17 @@ V-Values range from approximately 0.2 - 0.7.
 
 
 ```python
-# Create a copy of the original data fram for emergency scenarios
+
+# Create a copy of the original data fram for break glass scenarios
+
 churn_original = churn_df.copy()
 
 # Isolate target variable to its own variable with all column values
 target = churn_df['Churn']
 
 # Drop Columns
-churn_dropped = churn_df.drop(columns=['Churn', 'customerID', 'gender', 'PaperlessBilling' ,'PaymentMethod'], axis=1, inplace= True)
+
+# churn_dropped = churn_df.drop(columns=['Churn', 'customerID', 'gender', 'PaperlessBilling' ,'PaymentMethod'], axis=1, inplace= True)
 
 # Impute if Necessary
 
