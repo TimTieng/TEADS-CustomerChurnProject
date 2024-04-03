@@ -16,6 +16,7 @@ In this project, you will:
 
 
 ### Project Information
+
     Python Version: 3.10.13
     Python Packages: Outlined in pip_requirements.txt
     Dataset: WA_Fn-UseC_-Telco-Customer-Churn.csv (Provided)
@@ -42,6 +43,7 @@ from sklearn.preprocessing import MinMaxScaler, StandardScaler
 # Deep Learning
 import keras
 ```
+
 
 ## Task 1: Initial Data Exploration
 
@@ -70,6 +72,7 @@ import keras
 # Obtain - Read in the data, convert to PD Dataframe, and perform initial inspection of the dataset
 churn_file = pd.read_csv('../Data/WA_Fn-UseC_-Telco-Customer-Churn.csv')
 churn_df = pd.DataFrame(churn_file)
+
 ```
 
 ### Task 1.2: Examine the Dataset:
@@ -84,6 +87,7 @@ print(churn_df.shape)
 2. Attributes/Columns: 21
 3. Datatypes Present: int64(2x), float64(1x), string objects(18x)
 4. Memory Usage - 7.8 MB (Small)
+
 
 ### Task 1.3: Check Datatypes
 
@@ -104,15 +108,18 @@ TotalCharges has some values with whitespace strings. These need replaced with 0
 # Check for null Values - percentage per column
 churn_df.isna().mean().sort_values(ascending= False)
 # No null values 
+
 ```
 
 
 ```python
+
 churn_df.TotalCharges = churn_df['TotalCharges'].replace(' ', 0)
 churn_df['SeniorCitizen'] = churn_df['SeniorCitizen'].astype('str')
 churn_df['TotalCharges'] = pd.to_numeric(churn_df['TotalCharges'])
 churn_df.info(memory_usage='deep')
 ```
+
 
 ### Task 1.5: Generate Summary Statistics
 
@@ -124,6 +131,7 @@ churn_df.head()
 
 
 ```python
+
 # Desriptive Statistics -Numerical Attributes
 churn_df.describe()
 ```
@@ -135,6 +143,7 @@ churn_df.describe(include='all')
 ```
 
 #### Data Observerations
+
 1. Gender Distribution - Dataset has 7043 total observations with only two unique values (Male, Female). Right now there are 3555 Male values Which suggest the data is relatively balanced. 
 2. Senior Citizen Attribute (Prior to DT casting) - The mean value is .162 which can be translated as 16.2 of the userbase is classified as a senior citizen. Additional definition of what describes a Senior Citizen mayh be needed for future analysis (what age classifies senior citizen cut off?)
 3. Tenure - Mean value is about 32.4% with a min value of 0 months and max months membership of 72 months. STD is 24.6 which can be viewed as a wide variance in the quartiles.
@@ -145,7 +154,9 @@ churn_df.describe(include='all')
 ---
 ---
 
+
 ## Task 2: Exploratory Data Analysis (EDA)
+
 
 **Objective:** Use statistical analysis and visualization techniques to uncover insights and identify patterns related to custom	er churn.
 
@@ -167,12 +178,14 @@ churn_df.describe(include='all')
 * Remember to import necessary libraries like `seaborn as sns` and `matplotlib.pyplot as plt`.
 
 
+
 ### Task 2.1 Visualize distribution of numerical features
 Created a function to visualize numerical features. 
 
 
 
 ```python
+
 def visualize_numerical_histograms(df):
     """
     Purpose - A function that takes in a dataframe and returns histograms on the dataframe's numerical values. 
@@ -203,13 +216,16 @@ visualize_numerical_histograms(churn_df)
 ```
 
 #### Visual Observations
+
 1. **Tenure Distribution**: There are two distinct peaks for this attribute, alluding to that the current customer base are either new OR customers that churn quickly. The center dip in the graph may allude to the typical range where churn is likely to happen
 2. **MonthlyCharges Distribution**: Visually, there is a right skew to this column. There also seems to be a lot of customers who are only paying for $20 for services. This may highlight that these customers are only paying for a single service (internet, phone, etc). From a business/market capture perspective, we can view this as potential customer base to target with the goal of motivating them to add more services to their subscription. The right end of the graph may represent customers who pay for premium-like services or combines multiple service offerings to their subscription. 
 3. **TotalCharges Distributio**n**: This attribute has a long trailing tail towards the right of the graph. Additionally, there are alot of customers with a low "TotalCharges" value. This is aligned with teh MonthlyCharges column and may be attributed to the customer base only paying for 1 service. 
 
 **Business Significance**: The three graphs shows information abou the current customer base. It seems as though there are two "populations" in the customer base: Customers who are new, and customers who pay for multiple services. Based on the dip in the MonthlyCharges Distribution, this could be viewed as our customberbase we should focus on.
 
+
 #### Statistical Observations: Anderson Tests for Skewness
+
 
 
 ```python
@@ -227,6 +243,7 @@ def anderson_skewness_test(df):
     if len(col) < 8:
       print("\t", end="")
     print(f'{a.statistic:.2f}', end="\t")
+
     if a.statistic < a.critical_values[0]:
       print("Normal")
     else:
@@ -235,6 +252,7 @@ def anderson_skewness_test(df):
 
 anderson_skewness_test(churn_df)
 ```
+
 
 Observations: 
 - None of our numerical columns are normal at the 15% significance level based on having anderson values above the critical value at the 15% threshold. 
@@ -331,7 +349,9 @@ def create_boxplots(df):
 create_boxplots(churn_df)
 ```
 
+
 #### Boxplot Observations
+
 1. **SeniorCitizen (Prior to casting)** - There seems to be an outlier that returns an ineffective boxplot. I need to create a function that can handle outliers. I originally thought handling the figure width was needed to resolve the error. 
 2. **Tenure Boxplot** : This attrribute looks relatively uniform. This graph visually describes the customers who been wiht the services for a long time
 3. **MonthlyCharges Boxplot**: The median placement on the graph confirms the right skew nature from the histogram. This plot also confirms the observation that customers tend to have lower monthly charges or are paying for single services vs bundling services
@@ -423,6 +443,29 @@ chi_squared_test(churn_df, 'Churn')
 6.  PaymentMethod
 7.  Contract
 
+
+### Cramer's V-Test on Categorical Values
+
+
+```python
+# Cramers-V Test Function Version 2
+def cramers_v(confusion_matrix):
+    """
+    Purpose: Calculates Cramer's V statistic for categorical variables.
+    Parameters: 
+        x = first categorical Value
+        y = second categorical value
+    Returns: Cramer's V value
+    """
+    chi2, _, _, _ = chi2_contingency(confusion_matrix)
+    n = confusion_matrix.sum().sum()  # Total observations
+    phi2 = chi2 / n
+    r, k = confusion_matrix.shape
+    phi2corr = max(0, phi2 - ((k-1)*(r-1))/(n-1))
+    rcorr = r - ((r-1)**2)/(n-1)
+    kcorr = k - ((k-1)**2)/(n-1)
+    return np.sqrt(phi2corr / min((kcorr-1), (rcorr-1)))
+
 ### Task 2.5: Create Pair Plot
 
 
@@ -435,10 +478,57 @@ def create_pair_plot(df):
     Prints - 
     """
     pass
+
 ```
 
 
 ```python
+
+def calculate_cramers_v_for_attributes(df, attributes):
+    """
+    Purpose: To assess the relationship between each pair of categorical attributes.
+    Parameters:
+        df: pandas DataFrame containing the data.
+        attributes: list of column names of potential categorical variables.
+    Returns:
+        A dictionary with key as attribute pairs and value as Cramer's V statistic.
+    """
+    cramers_v_results = {}
+    for i, attr1 in enumerate(attributes):
+        for attr2 in attributes[i+1:]:
+            confusion_matrix = pd.crosstab(df[attr1], df[attr2])
+            cramers_v_value = cramers_v(confusion_matrix)
+            cramers_v_results[(attr1, attr2)] = cramers_v_value
+
+    return cramers_v_results
+```
+
+
+```python
+# Test
+potential_attributes = ['InternetService', 'OnlineSecurity', 'OnlineBackup','DeviceProtection', 'TechSupport', 'PaymentMethod', 'Contract' ]
+cramers_v_results = calculate_cramers_v_for_attributes(churn_df, potential_attributes)
+for pair, value in cramers_v_results.items():
+    print(f"Cramer's V for {pair}: {value:.4f}")
+```
+
+### Cramer's V Interpretation
+
+Notes - Cramer's V is used to assess the strength of association between pairs of categorical values in our churn_df. Cramer's V helps identify potentially redundant features
+If we chose two independent variables that have strong associations to each other, the model may bias towards those attributes, affecting our predicitve power.
+
+V-Values range from approximately 0.2 - 0.7.
+
+
+```python
+
+```
+
+---
+---
+
+### Task 3: Data Preprocessing
+
 create_pair_plot(churn_df)
 ```
 
@@ -448,6 +538,7 @@ create_pair_plot(churn_df)
 ---
 
 ## Task 3: Data Preprocessing
+
 
 **Objective:** Split the dataset into training and testing sets, then clean the training dataset by handling missing values, outliers, and duplicate entries using `feature_engine` to prepare for further analysis.
 
@@ -474,13 +565,16 @@ create_pair_plot(churn_df)
 
 
 ```python
+
 # Create a copy of the original data fram for break glass scenarios
+
 churn_original = churn_df.copy()
 
 # Isolate target variable to its own variable with all column values
 target = churn_df['Churn']
 
 # Drop Columns
+
 # churn_dropped = churn_df.drop(columns=['Churn', 'customerID', 'gender', 'PaperlessBilling' ,'PaymentMethod'], axis=1, inplace= True)
 
 # Impute if Necessary
